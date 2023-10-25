@@ -1,8 +1,7 @@
 package com.hch;
 
 import java.awt.Color;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.EventQueue;
 
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -23,9 +22,11 @@ public class App
 {
     public static void main( String[] args )
     {
-        App app = new App();
+        EventQueue.invokeLater(() -> {
+            App app = new App();
+            app.initJFrame();
+        });
 
-        app.initJFrame();
     }
 
     private String tipText = "1. 确保目标设备连接到同一wifi下 \n"
