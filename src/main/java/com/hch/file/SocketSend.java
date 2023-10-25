@@ -11,19 +11,11 @@ import java.util.function.Consumer;
 
 public class SocketSend {
 
-    private Socket socket;
+    private String ip;
+    private int port;
 
     // log输出组件
     private Consumer<String> logAppender;
-
-    public void setLogAppender(Consumer<String> logAppender) {
-        this.logAppender = logAppender;
-        
-    }
-
-    public Socket getSocket() {
-        return socket;
-    }
 
     /**
      * 构造方法
@@ -32,16 +24,9 @@ public class SocketSend {
      * @param logAppender       日志输出组件
      */
     public SocketSend(String ip, int port, Consumer<String> logAppender) {
-        try {
-            socket = new Socket(ip, port);
-            this.logAppender = logAppender;
-        } catch (UnknownHostException e) {
-            System.out.printf("未知主机异常");
-            e.printStackTrace();
-        } catch (IOException e) {
-            logAppender.accept("io 异常,连接socket失败");
-            e.printStackTrace();
-        }
+        this.ip = ip;
+        this.port = port;
+        this.logAppender = logAppender;
     }
 
     /**
@@ -53,9 +38,10 @@ public class SocketSend {
             
             logAppender.accept("连接到服务器");
 
+            Socket socket = new Socket(ip, port);
 
             InputStream in = new BufferedInputStream(new FileInputStream(filePath));
-            OutputStream out = this.socket.getOutputStream();
+            OutputStream out = socket.getOutputStream();
             byte[] buf = new byte[1024];
             int len = 0;
             while ((len = in.read(buf)) != -1) {
@@ -84,26 +70,6 @@ public class SocketSend {
         } catch (IOException e) {
             logAppender.accept("io异常");
             e.printStackTrace();
-        } 
-
-        
-    }
-
-    /**
-     * socket关闭操作
-     */
-    public void closeSocket() {
-
-        logAppender.accept("关闭网络");
-
-        if (socket != null && !socket.isClosed()) {
-            try {
-                socket.close();
-                logAppender.accept("socket已关闭");
-            } catch (IOException e) {
-                logAppender.accept("socket关闭异常");
-                e.printStackTrace();
-            }
         }
         
     }
