@@ -16,12 +16,6 @@ public class SocketSend {
     // log输出组件
     private Consumer<String> logAppender;
 
-    // 本地文件流
-    private InputStream in;
-
-    // socket输出流
-    private OutputStream out;
-
     public void setLogAppender(Consumer<String> logAppender) {
         this.logAppender = logAppender;
         
@@ -45,7 +39,7 @@ public class SocketSend {
             System.out.printf("未知主机异常");
             e.printStackTrace();
         } catch (IOException e) {
-            logAppender.accept("io 异常");
+            logAppender.accept("io 异常,连接socket失败");
             e.printStackTrace();
         }
     }
@@ -60,52 +54,55 @@ public class SocketSend {
             logAppender.accept("连接到服务器");
 
 
-            in = new BufferedInputStream(new FileInputStream(filePath));
-            out = this.socket.getOutputStream();
+            InputStream in = new BufferedInputStream(new FileInputStream(filePath));
+            OutputStream out = this.socket.getOutputStream();
             byte[] buf = new byte[1024];
+            long fileSize = 0;
             int len = 0;
             while ((len = in.read(buf)) != -1) {
                 out.write(buf, 0, len);
+                fileSize += len;
                 logAppender.accept(new String(buf, 0, len, "utf-8"));
             }
+            // 最后发送结束标志
             byte[] endBytes = "\n###file EOF###\n".getBytes("utf-8");
+            fileSize += endBytes.length;
             out.write(endBytes, 0, endBytes.length);
             out.flush();
-            // 这里不仅io关闭，需要等待目标设置读取完成后，手动操作关闭
-
             
+            // 需要等待目标设置读取完成后，再关闭io
+            while (socket.getInputStream() == null) {
+                Thread.sleep(500);
+            }
+            // 接收远程响应
+            InputStream response = socket.getInputStream();
+            byte[] responseBytes = new byte[1024];
+            int readSize = response.read(responseBytes);
+            String responseContent = new String(responseBytes, 0, readSize, "utf-8");
+            logAppender.accept("远程响应内容：");
+            logAppender.accept(responseContent);
+            // 关闭io
+            in.close();
+            out.close();
+            // 关闭socket 
+            socket.close();
+            logAppender.accept("传输完成");
         } catch (IOException e) {
             logAppender.accept("io异常");
             e.printStackTrace();
-            return;
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
 
         
     }
 
     /**
-     * socket及文件关闭操作
+     * socket关闭操作
      */
     public void closeSocket() {
 
         logAppender.accept("关闭网络");
-        if (in != null) {
-            try {
-                in.close();
-            } catch (IOException e) {
-                logAppender.accept("in关闭异常");
-                e.printStackTrace();
-            }
-        }
-
-        if (out != null) {
-            try {
-                out.close();
-            } catch (IOException e) {
-                logAppender.accept("out关闭异常");
-                e.printStackTrace();
-            }
-        }
 
         if (socket != null && !socket.isClosed()) {
             try {

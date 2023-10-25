@@ -29,9 +29,9 @@ public class App
     }
 
     private String tipText = "1. 确保目标设备连接到同一wifi下 \n"
-        + "2. 设置目标设备ip和端口，这里没有进行格式校验，使用时需注意；\n"
+        + "2. 设置目标设备ip和端口，这里没有进行格式校验，使用时需注意 \n"
         + "3. 选择文件路径，指定要发送的文件 \n"
-        + "4. 点击'发送文件'按钮，由于需要等待目标设置完成读取，不能发送完直接关闭io流， 所以需要手动'关闭网络传输'， 关闭主窗口也可以 \n";
+        + "4. 点击'发送文件'按钮，窗口显示发送完成，传输结束 \n";
 
     private int posX = 30;
     private int posY = 30;
@@ -67,7 +67,7 @@ public class App
         JLabel ipLabel = new JLabel("目标ip");
         
 
-        JTextField ipInput = new JTextField("172.16.1.131", 20);
+        JTextField ipInput = new JTextField("172.16.1.227", 20);
         
 
         JLabel portLabel = new JLabel("目标端口");
@@ -106,9 +106,6 @@ public class App
         JButton sendBtn = new JButton("发送文件");
         
 
-        JButton closeSocket = new JButton("关闭网络传输");
-        
-
         sendBtn.addActionListener(e -> {
             String filePath = sendText.getText().trim();
             if ("".equals(filePath) || sendText.getText().equals("未选择文件")) {
@@ -121,9 +118,6 @@ public class App
                     );
                 socketSend.sendFileToRemote(filePath);
 
-                // 关闭socket
-                closeSocket.addActionListener(l -> socketSend.closeSocket());
-                jf.addWindowListener(new CloseHandler(socketSend::closeSocket));
             }
         });
 
@@ -144,7 +138,6 @@ public class App
         panel.add(fileBtn);
         panel.add(sendText);
         panel.add(sendBtn);
-        panel.add(closeSocket);
         panel.add(scroll);
         panel.add(tip);
 
@@ -158,7 +151,6 @@ public class App
         fileBtn.setBounds(getPosX(), addPosY(), 100, 30);
         sendText.setBounds(marginPosX(), getPosY(), 150, 30);
         sendBtn.setBounds(getPosX(), addPosY(), 100, 30);
-        closeSocket.setBounds(marginPosX(), getPosY(), 100, 30);
         actionLogText.setBounds(getPosX(), addPosY(), 200, 80);
         scroll.setBounds(getPosX(), getPosY(), 270, 80);
         tip.setBounds(getPosX(), getPosY() + 140, 270, 140);
@@ -174,21 +166,5 @@ public class App
         jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 
-    /**
-     * 防止未关闭socket，在关闭程序的时候操作一次
-     */
-    private static class CloseHandler extends WindowAdapter {
-
-        private Runnable closeOp;
-
-        public CloseHandler(Runnable closeOp) {
-            this.closeOp = closeOp;
-
-        }
-
-        public void windowClosing(final WindowEvent event) {
-            closeOp.run();
-        }
-    }
 
 }
