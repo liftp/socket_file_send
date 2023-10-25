@@ -57,26 +57,20 @@ public class SocketSend {
             InputStream in = new BufferedInputStream(new FileInputStream(filePath));
             OutputStream out = this.socket.getOutputStream();
             byte[] buf = new byte[1024];
-            long fileSize = 0;
             int len = 0;
             while ((len = in.read(buf)) != -1) {
                 out.write(buf, 0, len);
-                fileSize += len;
                 logAppender.accept(new String(buf, 0, len, "utf-8"));
             }
             // 最后发送结束标志
             byte[] endBytes = "\n###file EOF###\n".getBytes("utf-8");
-            fileSize += endBytes.length;
             out.write(endBytes, 0, endBytes.length);
             out.flush();
             
-            // 需要等待目标设置读取完成后，再关闭io
-            while (socket.getInputStream() == null) {
-                Thread.sleep(500);
-            }
             // 接收远程响应
             InputStream response = socket.getInputStream();
             byte[] responseBytes = new byte[1024];
+            // 阻塞读直到响应
             int readSize = response.read(responseBytes);
             String responseContent = new String(responseBytes, 0, readSize, "utf-8");
             logAppender.accept("远程响应内容：");
@@ -90,9 +84,7 @@ public class SocketSend {
         } catch (IOException e) {
             logAppender.accept("io异常");
             e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        } 
 
         
     }
