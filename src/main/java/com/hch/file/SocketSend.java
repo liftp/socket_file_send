@@ -1,6 +1,7 @@
 package com.hch.file;
 
 import java.io.BufferedInputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,27 +40,27 @@ public class SocketSend {
 
             Socket socket = new Socket(ip, port);
 
-            InputStream in = new BufferedInputStream(new FileInputStream(filePath));
             OutputStream out = socket.getOutputStream();
+            File destFile = new File(filePath);
+            long length = destFile.length();
+
+            // 写入文件信息，"文件名:文件大小;"，等待目标设备就绪
+            String fileName = filePath.substring(filePath.lastIndexOf("\\") + 1);
+            out.write((fileName + ":" + length + ";").getBytes("utf-8"));
+            out.flush();
+            // 阻塞等待目标响应
+            recvSocket(socket);
+            InputStream in = new BufferedInputStream(new FileInputStream(filePath));
             byte[] buf = new byte[1024];
             int len = 0;
             while ((len = in.read(buf)) != -1) {
                 out.write(buf, 0, len);
-                logAppender.accept(new String(buf, 0, len, "utf-8"));
+                // logAppender.accept(new String(buf, 0, len, "utf-8"));
             }
-            // 最后发送结束标志
-            byte[] endBytes = "\n###file EOF###\n".getBytes("utf-8");
-            out.write(endBytes, 0, endBytes.length);
             out.flush();
             
             // 接收远程响应
-            InputStream response = socket.getInputStream();
-            byte[] responseBytes = new byte[1024];
-            // 阻塞读直到响应
-            int readSize = response.read(responseBytes);
-            String responseContent = new String(responseBytes, 0, readSize, "utf-8");
-            logAppender.accept("远程响应内容：");
-            logAppender.accept(responseContent);
+            recvSocket(socket);
             // 关闭io
             in.close();
             out.close();
@@ -71,5 +72,15 @@ public class SocketSend {
             e.printStackTrace();
         }
         
+    }
+
+    void recvSocket(Socket socket) throws IOException {
+        InputStream response = socket.getInputStream();
+        byte[] responseBytes = new byte[1024];
+        // 阻塞读直到响应
+        int readSize = response.read(responseBytes);
+        String responseContent = new String(responseBytes, 0, readSize, "utf-8");
+        logAppender.accept("远程响应内容：");
+        logAppender.accept(responseContent);
     }
 }
