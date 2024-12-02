@@ -9,6 +9,7 @@
 3. 本地exe打包
     安装wix3，javafx jmods 视频教程参考外网大佬视频：https://www.youtube.com/watch?v=r9aw6qhPUN8   
     安装好相关依赖，使用mvn clean package 打包，使用java -jar 成功运行程序之后，
-    然后使用命令,基于项目路径：jpackage --main-jar .\target\socket_file_send-1.0-SNAPSHOT.jar --main-class com.hch.App --module-path "javafx-jmods local path" --add-modules javafx.controls,javafx.fxml --win-shortcut --win-menu
+    然后使用命令,基于项目路径：jpackage --main-jar .\target\socket_file_send-1.0-SNAPSHOT.jar --main-class com.hch.App --module-path "javafx-jmods local path" --add-modules javafx.controls,javafx.fxml --win-shortcut --win-menu,
+    
     成功后产生App-1.0.exe
     
